@@ -120,19 +120,23 @@ public class ImageWallpaper extends WallpaperService {
                 unloadWallpaper(true /* forgetSize */);
             }
         }
-
+        /**
+        *
+        *该方法在WallpaperService的onBind方法执行时，会触发该方法的执行，用于获取
+        *手机显示设备尺寸，然后根据该信息更新相关尺寸参数
+        */
         @Override
         public void onCreate(SurfaceHolder surfaceHolder) {
             if (DEBUG) {
                 Log.d(TAG, "onCreate");
             }
-
+            //执行父类的onCreate，父类其实未作任何操作。生命周期方法一般都需要调用super
             super.onCreate(surfaceHolder);
 
             //noinspection ConstantConditions
             mDefaultDisplay = getSystemService(WindowManager.class).getDefaultDisplay();
-            setOffsetNotificationsEnabled(false);
-
+            setOffsetNotificationsEnabled(false);//不接收壁纸滚动通知
+            //更新壁纸的相关参数，主要是初始化显示设备相关参数
             updateSurfaceSize(surfaceHolder, getDefaultDisplayInfo(), false /* forDraw */);
         }
 
@@ -142,28 +146,38 @@ public class ImageWallpaper extends WallpaperService {
             mBackground = null;
             unloadWallpaper(true /* forgetSize */);
         }
-
+        /**
+        *
+        *根据显示设备信息，初始化相关信息
+        * @Param surfaceHolder 保存了壁纸及Surface的相关尺寸信息
+        * @Param displayInfo 屏幕相关信息
+        * @Param forDraw 本次更新是否需要执行壁纸绘制
+        * @Return 壁纸是否已被加载
+        */
         boolean updateSurfaceSize(SurfaceHolder surfaceHolder, DisplayInfo displayInfo,
                 boolean forDraw) {
-            boolean hasWallpaper = true;
+            boolean hasWallpaper = true;//标记是否已有壁纸，初始认为壁纸已存在
 
             // Load background image dimensions, if we haven't saved them yet
+            // 如果壁纸的宽高还没有初始化，则加载壁纸并初始化宽高
             if (mBackgroundWidth <= 0 || mBackgroundHeight <= 0) {
                 // Need to load the image to get dimensions
-                loadWallpaper(forDraw);
+                loadWallpaper(forDraw);//加载壁纸（异步）
                 if (DEBUG) {
                     Log.d(TAG, "Reloading, redoing updateSurfaceSize later.");
                 }
-                hasWallpaper = false;
+                hasWallpaper = false;//标记壁纸尚未初始化
             }
 
             // Force the wallpaper to cover the screen in both dimensions
+            // 在壁纸和屏幕尺寸之间取较大者，从而保证壁纸能够被完整显示
             int surfaceWidth = Math.max(displayInfo.logicalWidth, mBackgroundWidth);
             int surfaceHeight = Math.max(displayInfo.logicalHeight, mBackgroundHeight);
 
             // Used a fixed size surface, because we are special.  We can do
             // this because we know the current design of window animations doesn't
             // cause this to break.
+            // 使用上面获得的尺寸来更新SurfaceHolder，同时将该尺寸缓存下来
             surfaceHolder.setFixedSize(surfaceWidth, surfaceHeight);
             mLastRequestedWidth = surfaceWidth;
             mLastRequestedHeight = surfaceHeight;
