@@ -1,0 +1,15 @@
+*.log
+*.sisc
+*.temp
+android_comment.sip_sym
+android_comment.sip_xab
+android_comment.sip_xad
+android_comment.sip_xc
+android_comment.sip_xf
+android_comment.sip_xm
+android_comment.sip_xr
+android_comment.sip_xsb
+android_comment.sip_xsd
+android_comment.siproj
+android_comment.siproj_settings.xml
+

@@ -64,7 +64,9 @@ public class ImageWallpaper extends WallpaperService {
             mEngine.trimMemory(level);
         }
     }
-
+   /**
+    *父类WallpaperService调用该方法来获取具体的Engine类，以便进一步执行壁纸的获取与绘制
+	*/
     @Override
     public Engine onCreateEngine() {
         mEngine = new DrawableEngine();
