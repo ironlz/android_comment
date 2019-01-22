@@ -720,20 +720,28 @@ public abstract class WallpaperService extends Service {
                 event.recycle();
             }
         }
-
+       /**
+       * 当surface尺寸发生改变时，会触发该方法来更新surface的相关信息
+       * 
+       * @Param forceRelayout 强制重新布局
+       * @Param forceReport 调用onSurfaceChanged并通知监听Surface尺寸的回调
+       * @Param redrawNeeded 是否需要重绘
+       *
+       */
         void updateSurface(boolean forceRelayout, boolean forceReport, boolean redrawNeeded) {
             if (mDestroyed) {
                 Log.w(TAG, "Ignoring updateSurface: destroyed");
             }
 
             boolean fixedSize = false;
+			//获取当前surface的尺寸，如果尺寸<= 0，则以屏幕尺寸作为该尺寸，如果尺寸大于0，则认为尺寸是固定的
             int myWidth = mSurfaceHolder.getRequestedWidth();
             if (myWidth <= 0) myWidth = ViewGroup.LayoutParams.MATCH_PARENT;
             else fixedSize = true;
             int myHeight = mSurfaceHolder.getRequestedHeight();
             if (myHeight <= 0) myHeight = ViewGroup.LayoutParams.MATCH_PARENT;
             else fixedSize = true;
-
+            //一系列的参数，标记surface是否正在创建，格式、尺寸、内衬、类型等是否发生了改变
             final boolean creating = !mCreated;
             final boolean surfaceCreating = !mSurfaceCreated;
             final boolean formatChanged = mFormat != mSurfaceHolder.getRequestedFormat();
@@ -742,6 +750,7 @@ public abstract class WallpaperService extends Service {
             final boolean typeChanged = mType != mSurfaceHolder.getRequestedType();
             final boolean flagsChanged = mCurWindowFlags != mWindowFlags ||
                     mCurWindowPrivateFlags != mWindowPrivateFlags;
+			//如果强制重新布局或者需要重绘，或者上述状态发生了改变，则进入该分支
             if (forceRelayout || creating || surfaceCreating || formatChanged || sizeChanged
                     || typeChanged || flagsChanged || redrawNeeded
                     || !mIWallpaperEngine.mShownReported) {

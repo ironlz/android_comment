@@ -363,31 +363,33 @@ public class ImageWallpaper extends WallpaperService {
         /**
          * Loads the wallpaper on background thread and schedules updating the surface frame,
          * and if {@param needsDraw} is set also draws a frame.
-         *
+         * 后台加载壁纸，如果needsDraw参数被设置，则在加载完后执行壁纸的绘制。
          * If loading is already in-flight, subsequent loads are ignored (but needDraw is or-ed to
          * the active request).
-         *
+         * 如果已经有壁纸加载任务在执行，后续的加载请求将被忽略，但是如果needsDraw为真，则保留下来
          * If {@param needsReset} is set also clears the cache in WallpaperManager first.
+         * 如果needsDraw参数被设置，同样需要首先清空WallpaperManager内的缓存
          */
         private void loadWallpaper(boolean needsDraw) {
-            mNeedsDrawAfterLoadingWallpaper |= needsDraw;
-            if (mLoader != null) {
+            mNeedsDrawAfterLoadingWallpaper |= needsDraw;//记录下壁纸加载完是否需要绘制
+            if (mLoader != null) {//如果已经存在一个壁纸加载任务，则忽略该次请求并直接返回
                 if (DEBUG) {
                     Log.d(TAG, "Skipping loadWallpaper, already in flight ");
                 }
                 return;
             }
+			//异步加载任务，用于加载壁纸
             mLoader = new AsyncTask<Void, Void, Bitmap>() {
                 @Override
                 protected Bitmap doInBackground(Void... params) {
                     Throwable exception;
                     try {
-                        return mWallpaperManager.getBitmap(true /* hardware */);
+                        return mWallpaperManager.getBitmap(true /* hardware */);//尝试获取并返回壁纸
                     } catch (RuntimeException | OutOfMemoryError e) {
                         exception = e;
                     }
 
-                    if (isCancelled()) {
+                    if (isCancelled()) {//如果该任务被取消，则返回null
                         return null;
                     }
 
@@ -396,29 +398,29 @@ public class ImageWallpaper extends WallpaperService {
                     // default wallpaper can't be loaded.
                     Log.w(TAG, "Unable to load wallpaper!", exception);
                     try {
-                        mWallpaperManager.clear();
+                        mWallpaperManager.clear();//如果壁纸获取失败，则尝试清空壁纸缓存
                     } catch (IOException ex) {
                         // now we're really screwed.
                         Log.w(TAG, "Unable reset to default wallpaper!", ex);
                     }
 
-                    if (isCancelled()) {
+                    if (isCancelled()) {//清空壁纸缓存后再次判断任务是否被取消
                         return null;
                     }
 
-                    try {
+                    try {//如果任务没有被取消，则再次尝试获取壁纸
                         return mWallpaperManager.getBitmap(true /* hardware */);
                     } catch (RuntimeException | OutOfMemoryError e) {
                         Log.w(TAG, "Unable to load default wallpaper!", e);
                     }
-                    return null;
+                    return null;//如果第二次尝试依然失败，则返回null
                 }
 
                 @Override
                 protected void onPostExecute(Bitmap b) {
-                    updateBitmap(b);
+                    updateBitmap(b);//使用新获取的壁纸更新壁纸信息
 
-                    if (mNeedsDrawAfterLoadingWallpaper) {
+                    if (mNeedsDrawAfterLoadingWallpaper) {//如果需要绘制壁纸，则执行壁纸的绘制
                         drawFrame();
                     }
 
