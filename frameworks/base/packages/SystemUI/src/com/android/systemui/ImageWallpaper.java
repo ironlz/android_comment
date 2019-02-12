@@ -354,7 +354,7 @@ public class ImageWallpaper extends WallpaperService {
                 }
 
                 drawWallpaperWithCanvas(sh, availw, availh, xPixels, yPixels);
-                scheduleUnloadWallpaper();
+                scheduleUnloadWallpaper();//
             } finally {
                 Trace.traceEnd(Trace.TRACE_TAG_VIEW);
             }
@@ -450,24 +450,25 @@ public class ImageWallpaper extends WallpaperService {
 
         private void unloadWallpaper(boolean forgetSize) {
             if (mLoader != null) {
-                mLoader.cancel(false);
+                mLoader.cancel(false);//取消尚未执行的壁纸加载任务
                 mLoader = null;
             }
             mBackground = null;
-            if (forgetSize) {
+            if (forgetSize) {//彻底忘记壁纸（尺寸信息用于判断壁纸是否需要更新的重要依据)
                 mBackgroundWidth = -1;
                 mBackgroundHeight = -1;
             }
 
             final Surface surface = getSurfaceHolder().getSurface();
-            surface.hwuiDestroy();
-
+            surface.hwuiDestroy();//销毁Surface的hwuiContext
+            // 清除缓存壁纸和默认壁纸
             mWallpaperManager.forgetLoadedWallpaper();
         }
 
         private void scheduleUnloadWallpaper() {
             Handler handler = getMainThreadHandler();
             handler.removeCallbacks(mUnloadWallpaperCallback);
+			//5秒钟后向主线程发送消息，执行mUnloadWallpaperCallback以重置壁纸资源
             handler.postDelayed(mUnloadWallpaperCallback, DELAY_FORGET_WALLPAPER);
         }
 
@@ -505,7 +506,7 @@ public class ImageWallpaper extends WallpaperService {
         }
 
         private void drawWallpaperWithCanvas(SurfaceHolder sh, int w, int h, int left, int top) {
-            Canvas c = sh.lockHardwareCanvas();
+            Canvas c = sh.lockHardwareCanvas();//获取“画布”，带锁
             if (c != null) {
                 try {
                     if (DEBUG) {
@@ -518,17 +519,17 @@ public class ImageWallpaper extends WallpaperService {
                         c.save(Canvas.CLIP_SAVE_FLAG);
                         c.clipRect(left, top, right, bottom,
                                 Op.DIFFERENCE);
-                        c.drawColor(0xff000000);
+                        c.drawColor(0xff000000);//没有壁纸时执行该方法绘制黑色背景
                         c.restore();
                     }
                     if (mBackground != null) {
                         RectF dest = new RectF(left, top, right, bottom);
                         Log.i(TAG, "Redrawing in rect: " + dest + " with surface size: "
                                 + mLastRequestedWidth + "x" + mLastRequestedHeight);
-                        c.drawBitmap(mBackground, null, dest, null);
+                        c.drawBitmap(mBackground, null, dest, null);//绘制壁纸
                     }
                 } finally {
-                    sh.unlockCanvasAndPost(c);
+                    sh.unlockCanvasAndPost(c);//释放“画布”，释放锁
                 }
             }
         }
